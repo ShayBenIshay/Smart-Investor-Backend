@@ -1,1 +1,3 @@
 20240712	17:19:09	ea4da43f-2915-4479-b4b8-b6fa176899d2	SyntaxError: Expected ',' or '}' after property value in JSON at position 12
+13/07/2024	16:52:51	7f4f8b14-8f91-46dd-b04e-511f1969a862	Error: Not allowed by CORS
+13/07/2024	16:54:09	21f73e8d-c001-4eb8-b79a-7d44a4dca329	Error: Not allowed by CORS
