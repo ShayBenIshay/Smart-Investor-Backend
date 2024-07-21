@@ -2,7 +2,11 @@ const Transaction = require("../models/Transaction");
 
 const getAllTransactions = async (req, res) => {
   console.log("getting transactions");
-  const transaction = await Transaction.find();
+  const { user } = req.body;
+  if (!user) {
+    return res.status(400).json({ message: "User field is required." });
+  }
+  const transaction = await Transaction.find({ user: user });
   if (!transaction)
     return res.status(204).json({ message: "No transactions found" });
   console.log(transaction);
@@ -10,14 +14,22 @@ const getAllTransactions = async (req, res) => {
 };
 
 const createNewTransaction = async (req, res) => {
-  const { stock, papers, operation } = req.body;
-  if (!stock.ticker || !stock.price || !stock.date || !papers || !operation)
+  const { user, stock, papers, operation } = req.body;
+  if (
+    !user ||
+    !stock.ticker ||
+    !stock.price ||
+    !stock.date ||
+    !papers ||
+    !operation
+  )
     return res
       .status(400)
       .json({ message: "All the fields of transaction are required." });
 
   try {
     const result = await Transaction.create({
+      user,
       stock: stock,
       papers: papers,
       operation: operation,
@@ -40,6 +52,7 @@ const updateTransaction = async (req, res) => {
       .status(204)
       .json({ message: `No transaction matched ID ${req.body.id}` });
   }
+  if (req.body?.user) transaction.user = req.body.user;
   if (req.body?.stock?.ticker) transaction.stock.ticker = req.body.stock.ticker;
   if (req.body?.stock?.price) transaction.stock.price = req.body.stock.price;
   if (req.body?.stock?.date) transaction.stock.date = req.body.stock.date;
@@ -62,7 +75,7 @@ const deleteTransaction = async (req, res) => {
       .json({ message: `No transaction matched ID ${req.body.id}` });
   }
   const result = await transaction.deleteOne({ _id: req.body.id });
-  result.id = req.body.id;
+  result.message = `Deleted transaction id: ${req.body.id}`;
   console.log(result);
   res.json(result);
 };
