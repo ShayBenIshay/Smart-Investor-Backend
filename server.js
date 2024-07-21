@@ -6,6 +6,8 @@ const cors = require("cors");
 const corsOptions = require("./config/corsOptions");
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
+const verifyJWT = require("./middleware/verifyJWT");
+const cookieParser = require("cookie-parser");
 const credentials = require("./middleware/credentials");
 const mongoose = require("mongoose");
 const connectDB = require("./config/dbConn");
@@ -30,13 +32,19 @@ app.use(express.urlencoded({ extended: false }));
 // built-in middleware for json
 app.use(express.json());
 
+//middleware for cookies
+app.use(cookieParser());
+
 //serve static files
 app.use("/", express.static(path.join(__dirname, "/public")));
 
 // routes
 app.use("/", require("./routes/root"));
+app.use("/auth", require("./routes/api/authRoutes"));
 
-app.use("/transactions", require("./routes/api/transactions"));
+app.use(verifyJWT);
+app.use("/users", require("./routes/api/userRoutes"));
+app.use("/transactions", require("./routes/api/transactionsRoutes"));
 
 app.all("*", (req, res) => {
   res.status(404);

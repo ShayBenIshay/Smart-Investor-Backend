@@ -1,6 +1,7 @@
-const Transaction = require("../model/Transaction");
+const Transaction = require("../models/Transaction");
 
 const getAllTransactions = async (req, res) => {
+  console.log("getting transactions");
   const transaction = await Transaction.find();
   if (!transaction)
     return res.status(204).json({ message: "No transactions found" });
