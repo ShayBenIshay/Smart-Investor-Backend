@@ -1,12 +1,12 @@
 const Transaction = require("../models/Transaction");
 
 const getAllTransactions = async (req, res) => {
-  console.log("getting transactions");
-  const { user } = req.body;
-  if (!user) {
-    return res.status(400).json({ message: "User field is required." });
-  }
-  const transaction = await Transaction.find({ user: user });
+  // const { user } = req.body;
+  // if (!user) {
+  //   return res.status(400).json({ message: "User field is required." });
+  // }
+  // const transaction = await Transaction.find({ user: user });
+  const transaction = await Transaction.find();
   if (!transaction)
     return res.status(204).json({ message: "No transactions found" });
   console.log(transaction);
@@ -14,9 +14,10 @@ const getAllTransactions = async (req, res) => {
 };
 
 const createNewTransaction = async (req, res) => {
-  const { user, stock, papers, operation } = req.body;
+  // const { user, stock, papers, operation } = req.body;
+  const { stock, papers, operation } = req.body;
   if (
-    !user ||
+    // !user ||
     !stock.ticker ||
     !stock.price ||
     !stock.date ||
@@ -29,7 +30,7 @@ const createNewTransaction = async (req, res) => {
 
   try {
     const result = await Transaction.create({
-      user,
+      // user,
       stock: stock,
       papers: papers,
       operation: operation,
