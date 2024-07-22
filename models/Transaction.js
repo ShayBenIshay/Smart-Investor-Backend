@@ -7,6 +7,10 @@ const transactionSchema = new Schema({
   //   required: true,
   //   ref: "User",
   // },
+  username: {
+    type: String,
+    required: true,
+  },
   stock: {
     ticker: {
       type: String,
