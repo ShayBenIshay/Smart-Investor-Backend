@@ -1,13 +1,13 @@
 {
-  "name": "12tut",
+  "name": "Smart-Investor-api",
   "version": "1.0.0",
-  "description": "Express tutorial",
+  "description": "Backend for Smart Investor app",
   "main": "server.js",
   "scripts": {
     "start": "node server",
     "dev": "nodemon server"
   },
-  "author": "Dave Gray",
+  "author": "Shay Ben Ishay",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.1",
@@ -16,7 +16,7 @@
     "date-fns": "^2.23.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "express-async-handler": "^1.2.0",
+    "express-async-errors": "^3.1.1",
     "express-rate-limit": "^7.3.1",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",

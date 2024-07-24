@@ -1,17 +1,19 @@
 const Transaction = require("../models/Transaction");
 const jwtDecode = require("jwt-decode").jwtDecode;
+
 const getAllTransactions = async (req, res) => {
   // console.log(req.cookies);
-  const { jwt } = req.cookies;
-  const decoded = jwtDecode(jwt);
-  const { username } = decoded;
+  // const { jwt } = req.cookies;
+  // const decoded = jwtDecode(jwt);
+  // const { username } = decoded;
 
-  if (!username) {
-    return res.status(400).json({ message: "User field is required." });
-  }
-  const transaction = await Transaction.find({ username });
-  if (!transaction)
-    return res.status(204).json({ message: "No transactions found" });
+  // if (!username) {
+  //   return res.status(400).json({ message: "User field is required." });
+  // }
+
+  const transaction = await Transaction.find().lean();
+  if (!transaction?.length)
+    return res.status(400).json({ message: "No transactions found" });
   console.log(transaction);
   res.json(transaction);
 };
@@ -21,14 +23,7 @@ const createNewTransaction = async (req, res) => {
   const decoded = jwtDecode(jwt);
   const { username } = decoded;
   const { stock, papers, operation } = req.body;
-  if (
-    !username ||
-    !stock.ticker ||
-    !stock.price ||
-    !stock.date ||
-    !papers ||
-    !operation
-  )
+  if (!stock.ticker || !stock.price || !stock.date || !papers || !operation)
     return res
       .status(400)
       .json({ message: "All the fields of transaction are required." });
@@ -48,6 +43,7 @@ const createNewTransaction = async (req, res) => {
 };
 
 const updateTransaction = async (req, res) => {
+  console.log(req.body);
   if (!req?.body?.id) {
     return res.status(400).json({ message: "ID parameter is required." });
   }
@@ -58,7 +54,7 @@ const updateTransaction = async (req, res) => {
       .status(204)
       .json({ message: `No transaction matched ID ${req.body.id}` });
   }
-  if (req.body?.user) transaction.user = req.body.user;
+  if (req.body?.username) transaction.username = req.body.username;
   if (req.body?.stock?.ticker) transaction.stock.ticker = req.body.stock.ticker;
   if (req.body?.stock?.price) transaction.stock.price = req.body.stock.price;
   if (req.body?.stock?.date) transaction.stock.date = req.body.stock.date;
