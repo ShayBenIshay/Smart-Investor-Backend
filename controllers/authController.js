@@ -2,7 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-// const isSecure = process.env.NODE_ENV !== "development";
+const isSecure = process.env.NODE_ENV === "development";
 
 // @desc Login
 // @route POST /auth/login
@@ -41,7 +41,7 @@ const login = async (req, res) => {
 
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
-    secure: true,
+    secure: isSecure,
     sameSite: "None",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -132,7 +132,7 @@ const logout = (req, res) => {
   res.clearCookie("jwt", {
     httpOnly: true,
     sameSite: "None",
-    secure: true,
+    secure: isSecure,
   });
   res.json({ message: "Cookie cleared" });
 };
