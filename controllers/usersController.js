@@ -126,6 +126,7 @@ const deleteUser = async (req, res) => {
     return res.status(400).json({ message: "User not found" });
   }
 
+  await Transaction.deleteMany({ username: user.username });
   const result = await user.deleteOne();
 
   const reply = `Username ${user.username} with ID ${user._id} deleted`;
