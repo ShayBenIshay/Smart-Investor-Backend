@@ -20,6 +20,7 @@ const getAllTransactions = async (req, res) => {
 
 const createNewTransaction = async (req, res) => {
   const { jwt } = req.cookies;
+  console.log(req.cookies);
   const decoded = jwtDecode(jwt);
   const { username } = decoded;
   const { stock, papers, operation } = req.body;

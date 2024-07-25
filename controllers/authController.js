@@ -2,9 +2,10 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const isSecure = process.env.NODE_ENV !== "development";
+// const isSecure = process.env.NODE_ENV !== "development";
+
 // @desc Login
-// @route POST /auth
+// @route POST /auth/login
 // @access Public
 const login = async (req, res) => {
   const { username, password } = req.body;
@@ -38,16 +39,48 @@ const login = async (req, res) => {
     { expiresIn: "7d" }
   );
 
-  // Create secure cookie with refresh token
   res.cookie("jwt", refreshToken, {
-    httpOnly: true, //accessible only by web server
-    secure: isSecure, //https
-    sameSite: "None", //cross-site cookie
-    maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  // Send accessToken containing username and roles
   res.json({ accessToken });
+};
+
+// @desc Register
+// @route POST /auth/register
+// @access Public
+const register = async (req, res) => {
+  console.log("register user");
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const duplicate = await User.findOne({ username })
+    .collation({ locale: "en", strength: 2 })
+    .lean()
+    .exec();
+
+  if (duplicate) {
+    return res.status(409).json({ message: "Duplicate username" });
+  }
+
+  const hashedPwd = await bcrypt.hash(password, 10); // salt rounds
+
+  const userObject = { username, password: hashedPwd, roles: ["Customer"] };
+
+  const user = await User.create(userObject);
+
+  console.log(user);
+  if (user) {
+    res.status(201).json({ message: `Registered ${username} succesfully` });
+  } else {
+    res.status(400).json({ message: "Invalid user data received" });
+  }
 };
 
 // @desc Refresh
@@ -55,8 +88,8 @@ const login = async (req, res) => {
 // @access Public - because access token has expired
 const refresh = (req, res) => {
   const cookies = req.cookies;
+  console.log(`cookies `);
   console.log(cookies);
-
   if (!cookies?.jwt) return res.status(401).json({ message: "Unauthorized" });
 
   const refreshToken = cookies.jwt;
@@ -96,12 +129,17 @@ const logout = (req, res) => {
   const cookies = req.cookies;
   console.log(cookies);
   if (!cookies?.jwt) return res.sendStatus(204); //No content
-  res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    sameSite: "None",
+    secure: true,
+  });
   res.json({ message: "Cookie cleared" });
 };
 
 module.exports = {
   login,
+  register,
   refresh,
   logout,
 };
