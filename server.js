@@ -41,6 +41,7 @@ app.use("/auth", require("./routes/api/authRoutes"));
 app.use(verifyJWT);
 app.use("/users", require("./routes/api/userRoutes"));
 app.use("/transactions", require("./routes/api/transactionsRoutes"));
+app.use("/previousCloses", require("./routes/api/previousClosesRoutes"));
 
 app.all("*", (req, res) => {
   res.status(404);

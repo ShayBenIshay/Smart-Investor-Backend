@@ -1,5 +1,7 @@
 const Transaction = require("../models/Transaction");
+const PreviousClose = require("../models/PreviousClose");
 const jwtDecode = require("jwt-decode").jwtDecode;
+const axios = require("axios");
 
 const getAllTransactions = async (req, res) => {
   // console.log(req.cookies);
@@ -11,11 +13,11 @@ const getAllTransactions = async (req, res) => {
   //   return res.status(400).json({ message: "User field is required." });
   // }
 
-  const transaction = await Transaction.find().lean();
-  if (!transaction?.length)
+  const transactions = await Transaction.find().lean();
+  if (!transactions?.length)
     return res.status(400).json({ message: "No transactions found" });
-  console.log(transaction);
-  res.json(transaction);
+  console.log(transactions);
+  res.json(transactions);
 };
 
 const createNewTransaction = async (req, res) => {
@@ -36,7 +38,35 @@ const createNewTransaction = async (req, res) => {
       papers,
       operation,
     });
+
     console.log(result);
+    const foundPreviousClose = await PreviousClose.findOne({
+      ticker: stock.ticker,
+      date: stock.date,
+    });
+
+    if (!foundPreviousClose) {
+      //fetch previous close from polygon api and save in to database
+      const { data: prevClose } = await axios.get(
+        `https://api.polygon.io/v2/aggs/ticker/${stock.ticker}/prev?adjusted=true&apiKey=${process.env.POLYGON_API_KEY}`
+      );
+      console.log(prevClose);
+      const prevCloseResult = await PreviousClose.create({
+        ticker: stock.ticker,
+        date: stock.date,
+        previousClose: {
+          close: prevClose.results[0].c,
+          high: prevClose.results[0].h,
+          low: prevClose.results[0].l,
+          open: prevClose.results[0].o,
+          volume: prevClose.results[0].v,
+        },
+      });
+      console.log(prevCloseResult);
+    } else {
+      console.log(foundPreviousClose);
+    }
+
     res.status(201).json(result);
   } catch (err) {
     console.error(err);
@@ -78,8 +108,24 @@ const deleteTransaction = async (req, res) => {
       .json({ message: `No transaction matched ID ${req.body.id}` });
   }
   const result = await transaction.deleteOne({ _id: req.body.id });
-  result.message = `Deleted transaction id: ${req.body.id}`;
+
+  const { ticker, date } = transaction.stock;
+  console.log(ticker, date);
+  const otherTransaction = await Transaction.exists({
+    "stock.ticker": ticker,
+    "stock.date": date,
+  });
+  console.log(otherTransaction);
+  let prevDeleteRes = "";
+  if (!otherTransaction) {
+    await PreviousClose.deleteOne({ ticker, date });
+  } else {
+    prevDeleteRes = `was not deleted (${otherTransaction._id})`;
+  }
+  console.log(prevDeleteRes);
+  result.message = `Deleted transaction id: ${req.body.id} and previousClose ${prevDeleteRes}`;
   console.log(result);
+
   res.json(result);
 };
 
