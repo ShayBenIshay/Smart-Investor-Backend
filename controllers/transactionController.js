@@ -2,17 +2,9 @@ const Transaction = require("../models/Transaction");
 const PreviousClose = require("../models/PreviousClose");
 const jwtDecode = require("jwt-decode").jwtDecode;
 const axios = require("axios");
+const { format } = require("date-fns");
 
 const getAllTransactions = async (req, res) => {
-  // console.log(req.cookies);
-  // const { jwt } = req.cookies;
-  // const decoded = jwtDecode(jwt);
-  // const { username } = decoded;
-
-  // if (!username) {
-  //   return res.status(400).json({ message: "User field is required." });
-  // }
-
   const transactions = await Transaction.find().lean();
   if (!transactions?.length)
     return res.status(400).json({ message: "No transactions found" });
@@ -38,22 +30,22 @@ const createNewTransaction = async (req, res) => {
       papers,
       operation,
     });
-
     console.log(result);
+
+    const todayDate = format(new Date(), "dd/MM/yyyy");
     const foundPreviousClose = await PreviousClose.findOne({
       ticker: stock.ticker,
-      date: stock.date,
+      date: todayDate,
     });
 
     if (!foundPreviousClose) {
-      //fetch previous close from polygon api and save in to database
       const { data: prevClose } = await axios.get(
         `https://api.polygon.io/v2/aggs/ticker/${stock.ticker}/prev?adjusted=true&apiKey=${process.env.POLYGON_API_KEY}`
       );
       console.log(prevClose);
       const prevCloseResult = await PreviousClose.create({
         ticker: stock.ticker,
-        date: stock.date,
+        date: todayDate,
         previousClose: {
           close: prevClose.results[0].c,
           high: prevClose.results[0].h,
@@ -66,7 +58,6 @@ const createNewTransaction = async (req, res) => {
     } else {
       console.log(foundPreviousClose);
     }
-
     res.status(201).json(result);
   } catch (err) {
     console.error(err);
@@ -113,12 +104,11 @@ const deleteTransaction = async (req, res) => {
   console.log(ticker, date);
   const otherTransaction = await Transaction.exists({
     "stock.ticker": ticker,
-    "stock.date": date,
   });
   console.log(otherTransaction);
   let prevDeleteRes = "";
   if (!otherTransaction) {
-    await PreviousClose.deleteOne({ ticker, date });
+    await PreviousClose.deleteOne({ ticker });
   } else {
     prevDeleteRes = `was not deleted (${otherTransaction._id})`;
   }

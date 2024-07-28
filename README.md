@@ -1,6 +1,6 @@
-David Gray's tuturial:
-https://www.youtube.com/watch?v=f2EqECiTBL8
+# Smart Investor api
 
-WebServer connected to MongoDB, with User Authorization & Authentication.
+This is the Backend Web Service for smart-investor.
 
-[<img src="https://cdn.gomix.com/2bdfb3f8-05ef-4035-a06e-2043962a3a13%2Fremix-button.svg" width="163px" />](https://glitch.com/edit/#!/import/github/ShayBenIshay/Web-Server)
+deployed at: https://smart-investor-api.onrender.com/
+\*\*I am using the free instance of onrender.com so the Web Service could spin down with inactivity, which can delay requests by 50 seconds, after that everything works fine.
