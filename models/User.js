@@ -13,6 +13,9 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: ["Customer"],
   },
+  lastLogin: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

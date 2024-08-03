@@ -20,11 +20,17 @@ const login = async (req, res) => {
   const match = await bcrypt.compare(password, foundUser.password);
   if (!match) return res.status(401).json({ message: "Unauthorized" });
 
+  const lastLogin = foundUser.lastLogin;
+  foundUser.lastLogin = new Date().toLocaleString();
+  await foundUser.save();
+  console.log(foundUser);
+
   const accessToken = jwt.sign(
     {
       UserInfo: {
         username: foundUser.username,
         roles: foundUser.roles,
+        lastLogin,
       },
     },
     process.env.ACCESS_TOKEN_SECRET,
@@ -69,7 +75,12 @@ const register = async (req, res) => {
 
   const hashedPwd = await bcrypt.hash(password, 10); // salt rounds
 
-  const userObject = { username, password: hashedPwd, roles: ["Customer"] };
+  const userObject = {
+    username,
+    password: hashedPwd,
+    roles: ["Customer"],
+    lastLogin: "first login",
+  };
 
   const user = await User.create(userObject);
 
@@ -109,6 +120,7 @@ const refresh = (req, res) => {
           UserInfo: {
             username: foundUser.username,
             roles: foundUser.roles,
+            lastLogin: foundUser.lastLogin,
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
