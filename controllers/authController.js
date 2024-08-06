@@ -79,7 +79,7 @@ const register = async (req, res) => {
     username,
     password: hashedPwd,
     roles: ["Customer"],
-    lastLogin: "first login",
+    lastLogin: "",
   };
 
   const user = await User.create(userObject);

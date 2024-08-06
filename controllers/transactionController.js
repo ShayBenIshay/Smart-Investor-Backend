@@ -24,25 +24,23 @@ const createNewTransaction = async (req, res) => {
       .json({ message: "All the fields of transaction are required." });
 
   try {
-    const result = await Transaction.create({
-      username,
-      stock,
-      papers,
-      operation,
-    });
-    console.log(result);
-
     const todayDate = format(new Date(), "dd/MM/yyyy");
     const foundPreviousClose = await PreviousClose.findOne({
       ticker: stock.ticker,
       date: todayDate,
     });
-
+    let result;
     if (!foundPreviousClose) {
       const { data: prevClose } = await axios.get(
         `https://api.polygon.io/v2/aggs/ticker/${stock.ticker}/prev?adjusted=true&apiKey=${process.env.POLYGON_API_KEY}`
       );
       console.log(prevClose);
+      if (prevClose.queryCount === 0) {
+        return res.status(400).json({
+          message: `ticker ${stock.ticker} has no data availabe. transaction did not save.
+          contact shaybishay@gmail.com for more information`,
+        });
+      }
       const prevCloseResult = await PreviousClose.create({
         ticker: stock.ticker,
         date: todayDate,
@@ -55,9 +53,14 @@ const createNewTransaction = async (req, res) => {
         },
       });
       console.log(prevCloseResult);
-    } else {
-      console.log(foundPreviousClose);
     }
+    result = await Transaction.create({
+      username,
+      stock,
+      papers,
+      operation,
+    });
+    console.log(result);
     res.status(201).json(result);
   } catch (err) {
     console.error(err);
