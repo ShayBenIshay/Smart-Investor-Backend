@@ -33,7 +33,7 @@ const getUser = async (req, res) => {
 // @desc Create new user
 // @route POST /users
 const createNewUser = async (req, res) => {
-  const { username, password, roles } = req.body;
+  const { username, password, roles, wallet } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ message: "All fields are required" });
@@ -55,8 +55,9 @@ const createNewUser = async (req, res) => {
       ? { username, password: hashedPwd }
       : { username, password: hashedPwd, roles };
 
-  const user = await User.create(userObject);
+  userObject.wallet = wallet;
 
+  const user = await User.create(userObject);
   if (user) {
     res.status(201).json({ message: `New user ${username} created` });
   } else {
@@ -67,9 +68,9 @@ const createNewUser = async (req, res) => {
 // @desc Update a user
 // @route PATCH /users
 const updateUser = async (req, res) => {
-  const { id, username, roles, password } = req.body;
+  const { id, username, roles, password, wallet } = req.body;
 
-  if (!id || !username || !Array.isArray(roles) || !roles.length) {
+  if (!id || !username || !Array.isArray(roles) || !roles.length || !wallet) {
     return res
       .status(400)
       .json({ message: "All fields except password are required" });
@@ -99,6 +100,7 @@ const updateUser = async (req, res) => {
 
   user.username = username;
   user.roles = roles;
+  user.wallet = wallet;
 
   if (password) {
     user.password = await bcrypt.hash(password, 10);

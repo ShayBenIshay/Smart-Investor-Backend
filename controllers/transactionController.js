@@ -3,6 +3,7 @@ const PreviousClose = require("../models/PreviousClose");
 const jwtDecode = require("jwt-decode").jwtDecode;
 const axios = require("axios");
 const { format } = require("date-fns");
+const User = require("../models/User");
 
 const getAllTransactions = async (req, res) => {
   const transactions = await Transaction.find().lean();
@@ -14,7 +15,6 @@ const getAllTransactions = async (req, res) => {
 
 const createNewTransaction = async (req, res) => {
   const { jwt } = req.cookies;
-  console.log(req.cookies);
   const decoded = jwtDecode(jwt);
   const { username } = decoded;
   const { stock, papers, operation } = req.body;
@@ -54,6 +54,12 @@ const createNewTransaction = async (req, res) => {
       });
       console.log(prevCloseResult);
     }
+
+    const user = await User.findOne({ username }).exec();
+    user.wallet -= stock.price * papers;
+    const userRes = await user.save();
+    console.log(userRes);
+
     result = await Transaction.create({
       username,
       stock,
@@ -68,7 +74,10 @@ const createNewTransaction = async (req, res) => {
 };
 
 const updateTransaction = async (req, res) => {
-  console.log(req.body);
+  const { jwt } = req.cookies;
+  const decoded = jwtDecode(jwt);
+  const { username } = decoded;
+
   if (!req?.body?.id) {
     return res.status(400).json({ message: "ID parameter is required." });
   }
@@ -79,12 +88,19 @@ const updateTransaction = async (req, res) => {
       .status(204)
       .json({ message: `No transaction matched ID ${req.body.id}` });
   }
+
+  const user = await User.findOne({ username }).exec();
+  user.wallet += transaction.stock.price * transaction.papers;
   if (req.body?.username) transaction.username = req.body.username;
   if (req.body?.stock?.ticker) transaction.stock.ticker = req.body.stock.ticker;
   if (req.body?.stock?.price) transaction.stock.price = req.body.stock.price;
   if (req.body?.stock?.date) transaction.stock.date = req.body.stock.date;
   if (req.body?.papers) transaction.papers = req.body.papers;
   if (req.body?.operation) transaction.operation = req.body.operation;
+  if (req.body?.operation) transaction.operation = req.body.operation;
+  user.wallet -= transaction.stock.price * transaction.papers;
+  const userRes = await user.save();
+  console.log(userRes);
 
   const result = await transaction.save();
   console.log(result);
@@ -92,6 +108,10 @@ const updateTransaction = async (req, res) => {
 };
 
 const deleteTransaction = async (req, res) => {
+  const { jwt } = req.cookies;
+  const decoded = jwtDecode(jwt);
+  const { username } = decoded;
+
   if (!req?.body?.id)
     return res.status(400).json({ message: "Transaction ID required." });
 
@@ -101,6 +121,12 @@ const deleteTransaction = async (req, res) => {
       .status(204)
       .json({ message: `No transaction matched ID ${req.body.id}` });
   }
+
+  const user = await User.findOne({ username }).exec();
+  user.wallet += transaction.stock.price * transaction.papers;
+  const userRes = await user.save();
+  console.log(userRes);
+
   const result = await transaction.deleteOne({ _id: req.body.id });
 
   const { ticker, date } = transaction.stock;

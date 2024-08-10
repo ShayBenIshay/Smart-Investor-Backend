@@ -30,6 +30,7 @@ const login = async (req, res) => {
       UserInfo: {
         username: foundUser.username,
         roles: foundUser.roles,
+        wallet: foundUser.wallet,
         lastLogin,
       },
     },
@@ -79,6 +80,7 @@ const register = async (req, res) => {
     username,
     password: hashedPwd,
     roles: ["Customer"],
+    wallet: 0,
     lastLogin: "",
   };
 
@@ -120,6 +122,7 @@ const refresh = (req, res) => {
           UserInfo: {
             username: foundUser.username,
             roles: foundUser.roles,
+            wallet: foundUser.wallet,
             lastLogin: foundUser.lastLogin,
           },
         },
