@@ -56,7 +56,11 @@ const createNewTransaction = async (req, res) => {
     }
 
     const user = await User.findOne({ username }).exec();
-    user.wallet -= stock.price * papers;
+    if (operation === "Buy") {
+      user.wallet -= stock.price * papers;
+    } else {
+      user.wallet += stock.price * papers;
+    }
     const userRes = await user.save();
     console.log(userRes);
 
@@ -90,7 +94,11 @@ const updateTransaction = async (req, res) => {
   }
 
   const user = await User.findOne({ username }).exec();
-  user.wallet += transaction.stock.price * transaction.papers;
+  // user.wallet += transaction.stock.price * transaction.papers;
+  let transactionDifference =
+    transaction.operation === "Buy"
+      ? transaction.stock.price * transaction.papers
+      : -(transaction.stock.price * transaction.papers);
   if (req.body?.username) transaction.username = req.body.username;
   if (req.body?.stock?.ticker) transaction.stock.ticker = req.body.stock.ticker;
   if (req.body?.stock?.price) transaction.stock.price = req.body.stock.price;
@@ -98,7 +106,12 @@ const updateTransaction = async (req, res) => {
   if (req.body?.papers) transaction.papers = req.body.papers;
   if (req.body?.operation) transaction.operation = req.body.operation;
   if (req.body?.operation) transaction.operation = req.body.operation;
-  user.wallet -= transaction.stock.price * transaction.papers;
+  // user.wallet -= transaction.stock.price * transaction.papers;
+  transactionDifference +=
+    transaction.operation === "Buy"
+      ? -(transaction.stock.price * transaction.papers)
+      : transaction.stock.price * transaction.papers;
+  user.wallet += transactionDifference;
   const userRes = await user.save();
   console.log(userRes);
 
@@ -123,7 +136,11 @@ const deleteTransaction = async (req, res) => {
   }
 
   const user = await User.findOne({ username }).exec();
-  user.wallet += transaction.stock.price * transaction.papers;
+  //update sell/buy operation
+  user.wallet +=
+    transaction.operation === "Buy"
+      ? transaction.stock.price * transaction.papers
+      : -(transaction.stock.price * transaction.papers);
   const userRes = await user.save();
   console.log(userRes);
 
